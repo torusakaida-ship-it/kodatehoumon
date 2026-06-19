@@ -1,0 +1,907 @@
+<meta charset="utf-8">
+<title>戸建て訪問 日次カウンター</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="訪問カウンター">
+<meta name="theme-color" content="#13151a">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#13151a;--surface:#1b1e25;--surface2:#23272f;--surface3:#2c313a;
+  --border:#333b47;--line:#2a303a;
+  --text:#eef2f7;--muted:#8a93a3;--faint:#5c6573;
+  --blue:#3b82f6;--purple:#a855f7;--green:#22c55e;--orange:#f59e0b;
+  --red:#ef4444;--teal:#14b8a6;--amber:#ffb020;--indigo:#6366f1;--cyan:#06b6d4;
+  --ja:"Zen Kaku Gothic New",sans-serif;
+  --num:"Saira Condensed","Zen Kaku Gothic New",sans-serif;
+  --shadow:0 6px 20px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--ja);
+  overscroll-behavior:none;-webkit-text-size-adjust:100%;}
+body{max-width:520px;margin:0 auto;min-height:100vh;
+  background:radial-gradient(900px 500px at 85% -8%,rgba(59,130,246,.10),transparent 60%),
+    radial-gradient(700px 480px at -10% 110%,rgba(245,158,11,.08),transparent 60%),var(--bg);}
+button{font-family:var(--ja);cursor:pointer;border:none;background:none;color:inherit;}
+input,select,textarea{font-family:var(--ja);}
+
+/* topbar */
+.topbar{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(19,21,26,.96),rgba(19,21,26,.82));
+  border-bottom:1px solid var(--line);padding:8px 14px 7px;}
+.brand{display:flex;align-items:center;gap:9px;}
+.logo{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#3b82f6,#1d4ed8);font-weight:900;font-size:15px;color:#fff;}
+.brand h1{font-size:15px;font-weight:900;margin:0;}
+.brand .sub{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.06em;}
+.topbar .row{display:flex;align-items:center;justify-content:space-between;}
+.who{display:flex;align-items:center;gap:8px;margin-top:7px;background:var(--surface);
+  border:1px solid var(--border);border-radius:11px;padding:8px 11px;}
+.who .pill{flex:1;min-width:0;}
+.who .lbl{font-size:9px;color:var(--faint);letter-spacing:.1em;font-weight:700;}
+.who .val{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.who .val.empty{color:var(--red);}
+.who .sep{width:1px;height:26px;background:var(--border);}
+.who .edit{font-size:11px;color:var(--amber);font-weight:700;padding:6px 9px;border-radius:8px;
+  background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.25);white-space:nowrap;}
+.datechip{font-family:var(--num);font-weight:700;font-size:13px;color:var(--text);
+  background:var(--surface2);border:1px solid var(--border);padding:5px 10px;border-radius:9px;
+  display:flex;align-items:center;gap:6px;}
+.datechip .dow{color:var(--amber);}
+
+/* content */
+.screen{padding:6px 14px 96px;}
+.hidden{display:none!important;}
+.sectitle{display:flex;align-items:center;gap:8px;margin:4px 2px 11px;}
+.sectitle .bar{width:4px;height:16px;border-radius:3px;background:var(--amber);}
+.sectitle h2{font-size:14px;font-weight:900;margin:0;}
+.sectitle .note{font-size:10px;color:var(--muted);margin-left:auto;}
+
+/* counter card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:9px 10px 9px 13px;margin-bottom:7px;position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);}
+/* 2列グリッド用ラッパー */
+.card-grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.card-grid2 .card{margin-bottom:0;}
+/* 2列カード内のボタンを小さく */
+.card-grid2 .btn-step{width:40px;height:40px;font-size:22px;border-radius:10px;}
+.card-grid2 .count{font-size:28px;padding:2px 0;}
+.card-grid2 .card .head{margin-bottom:4px;}
+.card-grid2 .card .name{font-size:11px;}
+.card-grid2 .card .tag{font-size:10px;padding:1px 6px;}
+.card-grid2 .countwrap .hint{font-size:8px;}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c,var(--blue));}
+.card .head{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.card .tag{font-family:var(--num);font-weight:700;font-size:12px;color:var(--c,var(--blue));
+  background:color-mix(in srgb,var(--c,var(--blue)) 16%,transparent);
+  padding:2px 8px;border-radius:7px;}
+.card .name{font-size:13px;font-weight:700;flex:1;}
+.card .ctrl{display:flex;align-items:center;gap:11px;}
+.btn-step{flex:0 0 auto;width:52px;height:52px;border-radius:13px;font-family:var(--num);
+  font-size:28px;font-weight:600;display:grid;place-items:center;transition:transform .07s;
+  border:1px solid var(--border);background:var(--surface2);color:var(--text);user-select:none;}
+.btn-step:active{transform:scale(.92);}
+.btn-minus{color:var(--muted);}
+.btn-plus{background:color-mix(in srgb,var(--c,var(--blue)) 22%,var(--surface2));
+  border-color:color-mix(in srgb,var(--c,var(--blue)) 50%,var(--border));color:#fff;
+  box-shadow:0 3px 12px color-mix(in srgb,var(--c,var(--blue)) 35%,transparent);}
+.countwrap{flex:1;text-align:center;}
+.count{width:100%;text-align:center;font-family:var(--num);font-weight:700;font-size:38px;
+  line-height:1;background:transparent;border:none;color:var(--text);padding:4px 0;
+  border-bottom:2px dashed transparent;}
+.count:focus{outline:none;border-bottom-color:var(--c,var(--blue));}
+.countwrap .hint{font-size:9px;color:var(--faint);margin-top:2px;}
+
+/* ===== 商談フラグパネル ===== */
+.nego-panel{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;overflow:hidden;
+  max-height:0;transition:max-height .3s ease;}
+.nego-panel.open{max-height:400px;}
+.nego-toggle{width:100%;padding:6px;border-radius:8px;font-size:10px;font-weight:700;
+  color:var(--cyan);background:color-mix(in srgb,var(--cyan) 10%,var(--surface2));
+  border:1px solid color-mix(in srgb,var(--cyan) 30%,var(--border));
+  text-align:center;margin-top:7px;letter-spacing:.05em;}
+/* 現状回線 */
+.line-panel{margin-top:8px;border-top:1px solid var(--line);padding-top:8px;}
+.line-panel .lph{font-size:9px;color:var(--faint);font-weight:700;letter-spacing:.08em;margin-bottom:7px;}
+.line-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.line-btn{padding:9px 4px;border-radius:11px;background:var(--surface2);
+  border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .07s;}
+.line-btn:active{transform:scale(.94);}
+.line-btn.active{background:color-mix(in srgb,var(--orange) 18%,var(--surface2));
+  border-color:color-mix(in srgb,var(--orange) 50%,var(--border));color:#fbbf24;}
+.line-btn .lname{font-size:10px;line-height:1.2;text-align:center;}
+.line-btn .lcnt{font-family:var(--num);font-size:18px;font-weight:700;color:var(--text);}
+.nego-panel .ph{font-size:9px;color:var(--faint);font-weight:700;letter-spacing:.08em;margin-bottom:8px;}
+.flag-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.flag-btn{display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:13px;
+  background:var(--surface2);border:1px solid var(--border);text-align:left;
+  transition:transform .07s,background .1s;user-select:none;position:relative;}
+.flag-btn:active{transform:scale(.96);}
+.flag-btn .flab{font-size:10px;font-weight:900;color:var(--cyan);font-family:var(--num);
+  min-width:16px;}
+.flag-btn .ftxt{font-size:12px;font-weight:700;color:var(--text);flex:1;line-height:1.2;}
+.flag-btn .fcnt{font-family:var(--num);font-size:20px;font-weight:700;color:var(--text);
+  min-width:28px;text-align:right;}
+.flag-btn .fhint{font-size:8px;color:var(--faint);position:absolute;bottom:3px;right:7px;
+  letter-spacing:.03em;pointer-events:none;}
+.flag-btn.active{background:color-mix(in srgb,var(--cyan) 15%,var(--surface2));
+  border-color:color-mix(in srgb,var(--cyan) 50%,var(--border));}
+.flag-btn .fbadge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;
+  background:var(--cyan);color:#0f172a;border-radius:99px;font-size:10px;font-weight:900;
+  display:grid;place-items:center;font-family:var(--num);padding:0 4px;
+  opacity:0;transition:opacity .15s;}
+.flag-btn.active .fbadge{opacity:1;}
+
+/* summary mini */
+.ordersum{display:flex;gap:8px;margin:2px 0 13px;flex-wrap:wrap;}
+.ordersum .box{flex:1;min-width:70px;background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;padding:10px 8px;text-align:center;}
+.ordersum .k{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.04em;}
+.ordersum .v{font-family:var(--num);font-size:26px;font-weight:700;line-height:1.15;}
+.ordersum .v.big{color:var(--teal);}
+.ordersum .v.red{color:var(--red);}
+.ordersum .v.indigo{color:var(--indigo);}
+.ordersum .v.cyan{color:var(--cyan);}
+
+/* add buttons */
+.addbtn{width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:900;
+  color:#fff;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.addbtn:active{transform:scale(.98);}
+.addbtn.red{background:linear-gradient(145deg,#ef4444,#b91c1c);box-shadow:0 4px 14px rgba(239,68,68,.35);}
+.addbtn.indigo{background:linear-gradient(145deg,#6366f1,#4338ca);box-shadow:0 4px 14px rgba(99,102,241,.35);}
+
+/* rejection/insight cards */
+.rej{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--red);
+  border-radius:14px;padding:12px 13px;margin-bottom:10px;}
+.rej .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.rej .addr{font-size:15px;font-weight:700;line-height:1.35;}
+.rej .nm{font-size:12px;color:var(--amber);font-weight:700;margin-top:2px;}
+.rej .meta{font-size:11px;color:var(--muted);margin-top:4px;}
+.rj-st{color:#b91c1c;font-weight:700;background:#fee2e2;padding:1px 6px;border-radius:4px;display:inline-block;}
+.rj-memo{color:#6b7280;margin-left:4px;}
+.rej .st{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:7px;}
+.st-perm{background:rgba(239,68,68,.15);color:#fca5a5;}
+.st-tmp{background:rgba(245,158,11,.15);color:#fcd34d;}
+.st-term{background:rgba(59,130,246,.15);color:#93c5fd;}
+.rej .del{font-size:18px;color:var(--faint);padding:2px 6px;line-height:1;flex-shrink:0;}
+.ins{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--indigo);
+  border-radius:14px;padding:12px 13px;margin-bottom:10px;}
+.ins .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.ins .catbadge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:7px;
+  background:rgba(99,102,241,.15);color:#a5b4fc;flex-shrink:0;margin-top:2px;}
+.ins .body{flex:1;min-width:0;}
+.ins .content{font-size:14px;font-weight:700;line-height:1.45;margin-bottom:5px;}
+.ins .try{font-size:12px;color:var(--teal);line-height:1.4;}
+.ins .try::before{content:"▶ ";}
+.ins .del{font-size:18px;color:var(--faint);padding:2px 6px;flex-shrink:0;}
+.empty-state{text-align:center;color:var(--faint);padding:38px 10px;font-size:13px;line-height:1.7;}
+.empty-state .ico{font-size:34px;opacity:.5;margin-bottom:8px;}
+
+/* ===== SCREENSHOT ===== */
+/* shot-note非表示 */
+.shot-note{display:none;}
+/* スクショガイド横線 */
+.shot-guide{display:flex;align-items:center;gap:10px;margin:4px 0 5px;}
+.shot-guide::before,.shot-guide::after{content:"";flex:1;height:2px;background:#1a1d23;}
+.shot-guide span{font-size:10px;font-weight:900;color:#1a1d23;white-space:nowrap;
+  background:#fde68a;padding:2px 10px;border-radius:20px;letter-spacing:.06em;}
+.shot{background:linear-gradient(180deg,#fbfbfd,#f3f5f9);color:#1a1d23;border-radius:14px;
+  padding:12px 14px 14px;box-shadow:var(--shadow);border:1px solid #e3e7ee;}
+.shot .sh-top{display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:2px solid #1a1d23;padding-bottom:9px;margin-bottom:11px;}
+.shot .sh-title{font-size:17px;font-weight:900;}
+.shot .sh-title small{display:block;font-size:9px;color:#7a828f;font-weight:700;letter-spacing:.14em;margin-top:1px;}
+.shot .sh-badge{font-size:9px;font-weight:900;padding:2px 8px;border-radius:6px;margin-top:3px;margin-bottom:4px;display:inline-block;}
+.sh-badge.a{background:#1a1d23;color:#fff;}
+.sh-badge.b{background:#4338ca;color:#fff;}
+.shot .sh-date{font-family:var(--num);font-size:15px;font-weight:700;text-align:right;line-height:1.25;}
+.shot .sh-date .dow{color:#b45309;}
+.shot .sh-who{display:flex;gap:14px;margin-bottom:0;}
+.shot .sh-who div{font-size:12px;}
+.shot .sh-who b{display:block;font-size:9px;color:#7a828f;letter-spacing:.1em;font-weight:700;}
+.shot .sh-who span{font-weight:700;font-size:14px;}
+.shot .sh-daterow{display:flex;align-items:center;justify-content:space-between;
+  margin:5px 0 8px;padding:4px 10px;background:#f1f5f9;border-radius:7px;}
+.shot .sh-daterow .sd-label{font-size:9px;color:#7a828f;font-weight:700;letter-spacing:.1em;}
+.shot .sh-daterow .sd-val{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:16px;color:#1a1d23;}
+.shot .sh-daterow .sd-dow{color:#b45309;}
+.shot .gtitle{font-size:11px;font-weight:900;color:#b45309;letter-spacing:.08em;margin:9px 0 5px;
+  display:flex;align-items:center;gap:6px;}
+.shot .gtitle::before{content:"★";}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.gcell{background:#fff;border:1px solid #e3e7ee;border-radius:9px;padding:6px 9px;
+  display:flex;justify-content:space-between;align-items:center;}
+.gcell .gl{font-size:12px;font-weight:700;color:#3a4150;}
+.gcell .gv{font-family:var(--num);font-size:21px;font-weight:700;color:#1a1d23;line-height:1;}
+.gcell.accent{background:#fff7ed;border-color:#fdba74;}
+.gcell.accent .gv{color:#c2410c;}
+.gcell.full{grid-column:1/3;background:#0f1115;border-color:#0f1115;}
+.gcell.full .gl{color:#cbd5e1;}
+.gcell.full .gv{color:#fff;font-size:23px;}
+.gcell.accent2{background:#0f766e;border-color:#0f766e;}
+.gcell.accent2 .gl{color:#99f6e4;}
+.gcell.accent2 .gv{color:#fff;font-size:22px;font-weight:900;}
+.gcell.accent3{background:#991b1b;border-color:#991b1b;}
+.gcell.accent3 .gl{color:#fca5a5;}
+.gcell.accent3 .gv{color:#fff;font-size:22px;font-weight:900;}
+/* 商談内訳 コンパクト1行 */
+.nego-inline{background:#fff;border:1px solid #e3e7ee;border-radius:9px;padding:8px 11px;
+  display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
+.nchip{display:flex;align-items:center;gap:3px;}
+.nchip .nl{font-size:11px;font-weight:900;color:#0e7490;font-family:"Saira Condensed",sans-serif;}
+.nchip .nv{font-family:"Saira Condensed",sans-serif;font-size:16px;font-weight:700;color:#1a1d23;}
+.shot .rejlist,.shot .inslist{margin-top:5px;}
+.shot .rj,.shot .ins-item{background:#fff;border:1px solid #e3e7ee;border-radius:9px;
+  padding:8px 10px;margin-bottom:6px;}
+.shot .rj{border-left:4px solid #ef4444;}
+.shot .ins-item{border-left:4px solid #4338ca;}
+.shot .rj .a{font-size:13px;font-weight:700;color:#1a1d23;}
+.shot .rj .n{font-size:11px;color:#b45309;font-weight:700;}
+.shot .rj .m{font-size:10px;margin-top:4px;}
+.shot .rj .rj-st{color:#b91c1c;font-weight:700;background:#fee2e2;padding:1px 6px;border-radius:4px;display:inline-block;}
+.shot .rj .rj-memo{color:#6b7280;}
+.shot .ins-item .ic{font-size:9px;font-weight:700;background:#e0e7ff;color:#3730a3;
+  padding:1px 7px;border-radius:5px;display:inline-block;margin-bottom:4px;}
+.shot .ins-item .ix{font-size:12px;font-weight:700;color:#1a1d23;line-height:1.4;margin-bottom:3px;}
+.shot .ins-item .it{font-size:11px;color:#0f766e;line-height:1.35;}
+.shot .ins-item .it::before{content:"▶ ";}
+.shot .none{font-size:12px;color:#9aa3b0;padding:6px 2px;}
+.shot .foot{margin-top:13px;border-top:1px dashed #cdd3dd;padding-top:8px;
+  font-size:9px;color:#9aa3b0;text-align:center;}
+
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;z-index:40;
+  background:linear-gradient(180deg,rgba(27,30,37,.92),rgba(19,21,26,.99));
+  backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  display:flex;padding:7px 4px calc(7px + env(safe-area-inset-bottom,0));}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:5px 0;border-radius:10px;color:var(--muted);font-size:9px;font-weight:700;}
+.nav button .ic{font-size:19px;line-height:1;}
+.nav button.on{color:var(--amber);background:rgba(255,176,32,.1);}
+
+/* modal */
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);
+  display:flex;align-items:flex-end;justify-content:center;}
+.sheet{width:100%;max-width:520px;background:var(--surface);border-radius:22px 22px 0 0;
+  border-top:1px solid var(--border);padding:18px 16px calc(18px + env(safe-area-inset-bottom,0));
+  box-shadow:0 -10px 40px rgba(0,0,0,.5);animation:slideup .26s cubic-bezier(.2,.8,.2,1);}
+@keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet h3{margin:0 0 4px;font-size:17px;font-weight:900;}
+.sheet .desc{font-size:11px;color:var(--muted);margin-bottom:15px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;letter-spacing:.04em;}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);
+  border:1px solid var(--border);border-radius:11px;padding:13px;color:var(--text);font-size:16px;font-weight:500;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--amber);}
+.field textarea{resize:none;min-height:70px;font-size:15px;}
+.seg{display:flex;gap:7px;}
+.seg button{flex:1;padding:11px 4px;border-radius:11px;background:var(--surface2);
+  border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);}
+.seg button.on{background:rgba(239,68,68,.18);border-color:var(--red);color:#fca5a5;}
+.seg button.on[data-st="当面不要"]{background:rgba(245,158,11,.18);border-color:var(--orange);color:#fcd34d;}
+.seg button.on[data-st="期間限定"]{background:rgba(59,130,246,.18);border-color:var(--blue);color:#93c5fd;}
+.catsel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.catsel button{padding:10px 4px;border-radius:11px;background:var(--surface2);
+  border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);}
+.catsel button.on{background:rgba(99,102,241,.18);border-color:var(--indigo);color:#a5b4fc;}
+.actions{display:flex;gap:10px;margin-top:6px;}
+.btn-cancel{flex:1;padding:14px;border-radius:13px;background:var(--surface2);
+  border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:14px;}
+.btn-save{flex:2;padding:14px;border-radius:13px;font-weight:900;color:#fff;font-size:15px;
+  background:linear-gradient(145deg,#22c55e,#15803d);box-shadow:0 4px 14px rgba(34,197,94,.3);}
+.btn-save.red{background:linear-gradient(145deg,#ef4444,#b91c1c);box-shadow:0 4px 14px rgba(239,68,68,.3);}
+.btn-save.indigo{background:linear-gradient(145deg,#6366f1,#4338ca);box-shadow:0 4px 14px rgba(99,102,241,.3);}
+.btn-save:active,.btn-cancel:active{transform:scale(.98);}
+.danger-zone{margin-top:20px;text-align:center;}
+.danger-zone button{font-size:12px;color:var(--faint);text-decoration:underline;padding:8px;}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:99;}
+.loading .sp{width:34px;height:34px;border:3px solid var(--surface3);border-top-color:var(--amber);
+  border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:80;
+  background:var(--surface3);border:1px solid var(--border);color:var(--text);
+  padding:10px 18px;border-radius:30px;font-size:13px;font-weight:700;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+</style>
+
+<div class="loading" id="loading"><div class="sp"></div></div>
+
+<div class="topbar">
+  <div class="row">
+    <div class="brand">
+      <div class="logo">訪</div>
+      <div><h1>戸建て訪問 日次カウンター</h1><div class="sub">NEXSTAR / FIELD COUNTER</div></div>
+    </div>
+    <div class="datechip"><span id="dateTxt">--/--</span><span class="dow" id="dowTxt">(-)</span></div>
+  </div>
+  <div class="who" onclick="openProfile()">
+    <div class="pill"><div class="lbl">営業員名</div><div class="val empty" id="whoName">未設定</div></div>
+    <div class="sep"></div>
+    <div class="pill"><div class="lbl">担当エリア</div><div class="val empty" id="whoArea">未設定</div></div>
+    <div class="edit">設定 ✎</div>
+  </div>
+</div>
+
+<!-- COUNTER -->
+<div class="screen" id="scr-count">
+  <div class="sectitle"><span class="bar"></span><h2>本日のカウント</h2><span class="note">タップで＋／数字も直接編集可</span></div>
+  <div id="counterList"></div>
+  <div class="sectitle" style="margin-top:18px;"><span class="bar" style="background:var(--teal)"></span><h2>本日の成果</h2></div>
+  <div class="ordersum">
+    <div class="box"><div class="k">受注 合計</div><div class="v big" id="sumOrders">0</div></div>
+    <div class="box"><div class="k">撃退 件数</div><div class="v red" id="sumRej">0</div></div>
+    <div class="box"><div class="k">気づき</div><div class="v indigo" id="sumIns">0</div></div>
+    <div class="box"><div class="k">商談フラグ</div><div class="v cyan" id="sumFlags">0</div></div>
+  </div>
+  <div class="danger-zone"><button onclick="confirmReset()">この日のデータをリセット</button></div>
+</div>
+
+<!-- REJECTION -->
+<div class="screen hidden" id="scr-rej">
+  <div class="sectitle"><span class="bar" style="background:var(--red)"></span><h2>撃退宅（再訪禁止）</h2><span class="note" id="rejCount">0件</span></div>
+  <button class="addbtn red" onclick="openRej()">＋ 撃退宅を登録</button>
+  <div id="rejList"></div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="screen hidden" id="scr-ins">
+  <div class="sectitle"><span class="bar" style="background:var(--indigo)"></span><h2>気づき記録</h2><span class="note" id="insCount">0件</span></div>
+  <button class="addbtn indigo" onclick="openIns()">＋ 気づきを記録</button>
+  <div id="insList"></div>
+</div>
+
+<!-- SUMMARY A -->
+<div class="screen hidden" id="scr-suma">
+  <div id="shot-a"></div>
+</div>
+<!-- SUMMARY B -->
+<div class="screen hidden" id="scr-sumb">
+  <div id="shot-b"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button id="nav-count" class="on" onclick="go('count')"><span class="ic">🔢</span>集計</button>
+  <button id="nav-rej" onclick="go('rej')"><span class="ic">🚫</span>撃退宅</button>
+  <button id="nav-ins" onclick="go('ins')"><span class="ic">💡</span>気づき</button>
+  <button id="nav-suma" onclick="go('suma')"><span class="ic">📊</span>日報A</button>
+  <button id="nav-sumb" onclick="go('sumb')"><span class="ic">💡</span>日報B</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 商談フラグ定義 =====
+// 現状回線定義（エリア別）
+const LINE_COMMON = [
+  {key:"lDocomo",  name:"ドコモ光"},
+  {key:"lSoftbank",name:"SB光"},
+  {key:"lAu",      name:"AU光"},
+  {key:"lNuro",    name:"NURO光"},
+  {key:"lOther",   name:"その他"},
+];
+const LINE_HIROSHIMA = {key:"lMegaegg", name:"メガエッグ"};
+const LINE_TOKAI     = {key:"lCommufa", name:"コミュファ"};
+
+function getLineButtons(){
+  const regional = profile.region === "tokai" ? LINE_TOKAI : LINE_HIROSHIMA;
+  return [regional, ...LINE_COMMON];
+}
+
+const NEGO_FLAGS = [
+  {key:"fA", lab:"A", name:"工事内容"},
+  {key:"fB", lab:"B", name:"対象外"},
+  {key:"fC", lab:"C", name:"プロバイダ変更"},
+  {key:"fD", lab:"D", name:"料金"},
+  {key:"fE", lab:"E", name:"スマホ割"},
+  {key:"fF", lab:"F", name:"まとめ"},
+  {key:"fG", lab:"G", name:"申込書"},
+];
+
+const COUNTERS = [
+  {key:"visits",  tag:"①",  name:"訪問 戸数",    color:"var(--blue)"},
+  {key:"ng",      tag:"NG", name:"ｲﾝﾀｰﾎﾝ NG数", color:"var(--purple)"},
+  {key:"appo",    tag:"B",  name:"見込B数",       color:"var(--green)"},
+  {key:"meet",    tag:"②",  name:"面談 件数",     color:"var(--blue)"},
+  {key:"prospectS",tag:"S", name:"見込S数",       color:"var(--amber)"},
+  {key:"prospect",tag:"A",  name:"見込A数",       color:"var(--orange)"},
+  {key:"nego",    tag:"③",  name:"商談 件数",     color:"var(--cyan)", hasFlags:true},
+  {key:"nuro",    tag:"④",  name:"受注 NURO",     color:"var(--teal)"},
+  {key:"ntt",     tag:"④",  name:"受注 NTT10G",   color:"var(--teal)"},
+];
+const CATS = ["エリア","トーク","お客様タイプ","時間帯","商材","その他"];
+const DOW  = ["日","月","火","水","木","金","土"];
+
+let profile = {name:"", area:"", region:"hiroshima"};
+let today   = ymd(new Date());
+let day     = {counts:{}, flags:{}, lines:{}, rejections:[], insights:[]};
+COUNTERS.forEach(c => day.counts[c.key] = 0);
+NEGO_FLAGS.forEach(f => day.flags[f.key] = 0);
+[LINE_HIROSHIMA, LINE_TOKAI, ...LINE_COMMON].forEach(l => day.lines[l.key] = 0);
+let saveTimer = null, editingRej = null, editingIns = null;
+
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function fmtDate(s){const[y,m,d]=s.split("-");return y+"/"+m+"/"+d;}
+function dow(s){const[y,m,d]=s.split("-");return DOW[new Date(+y,+m-1,+d).getDay()];}
+function esc(s){return String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+// storage
+async function sget(k){
+  try{if(window.storage&&window.storage.get){const r=await window.storage.get(k,false);return r?JSON.parse(r.value):null;}}catch(e){}
+  try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}
+}
+async function sset(k,v){
+  try{if(window.storage&&window.storage.set){await window.storage.set(k,JSON.stringify(v),false);return;}}catch(e){}
+  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+}
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>sset("day:"+today,day),250);}
+function saveProfileNow(){sset("profile",profile);}
+
+async function init(){
+  const p=await sget("profile"); if(p) profile=p;
+  const d=await sget("day:"+today);
+  if(d){
+    day.counts     = {...day.counts,  ...(d.counts  ||{})};
+    day.flags      = {...day.flags,   ...(d.flags   ||{})};
+    day.lines      = {...day.lines,   ...(d.lines   ||{})};
+    day.rejections = d.rejections||[];
+    day.insights   = d.insights  ||[];
+  }
+  renderAll();
+  document.getElementById("loading").style.display="none";
+}
+
+function renderAll(){
+  document.getElementById("dateTxt").textContent = fmtDate(today).slice(5);
+  document.getElementById("dowTxt").textContent  = "("+dow(today)+")";
+  const wn=document.getElementById("whoName"), wa=document.getElementById("whoArea");
+  wn.textContent=profile.name||"未設定"; wn.classList.toggle("empty",!profile.name);
+  wa.textContent=profile.area||"未設定"; wa.classList.toggle("empty",!profile.area);
+  renderCounters(); renderRej(); renderIns(); renderSummary();
+}
+
+// ===== カウンター =====
+function renderCounters(){
+  const el = document.getElementById("counterList");
+
+  const makeCard = (c) => {
+    const flagsHtml = c.hasFlags ? `
+      <button class="nego-toggle" onclick="toggleNegoPanel()">▼ トーク到達フラグ（タップで展開）</button>
+      <div class="nego-panel" id="nego-panel">
+        <div class="ph">タップ=+1 ／ 長押し=−1</div>
+        <div class="flag-grid">
+          ${NEGO_FLAGS.map(f=>`
+            <button class="flag-btn${day.flags[f.key]>0?' active':''}" id="fb-${f.key}"
+              onpointerdown="startFlagPress('${f.key}')"
+              onpointerup="cancelFlagPress()"
+              onpointerleave="cancelFlagPress()">
+              <span class="flab">${f.lab}</span>
+              <span class="ftxt">${f.name}</span>
+              <span class="fcnt" id="fc-${f.key}">${day.flags[f.key]||0}</span>
+              <span class="fbadge" id="fbadge-${f.key}">${day.flags[f.key]||0}</span>
+              <span class="fhint">長押し−1</span>
+            </button>`).join("")}
+        </div>
+      </div>
+      <div class="line-panel">
+        <div class="lph">現状回線（タップでカウント）</div>
+        <div class="line-grid" id="line-grid">
+          ${getLineButtons().map(l=>`
+            <button class="line-btn${(day.lines[l.key]||0)>0?' active':''}" id="lb-${l.key}"
+              onclick="tapLine('${l.key}')">
+              <span class="lname">${l.name}</span>
+              <span class="lcnt" id="lc-${l.key}">${day.lines[l.key]||0}</span>
+            </button>`).join("")}
+        </div>
+      </div>` : "";
+    return `
+      <div class="card" style="--c:${c.color}">
+        <div class="head"><span class="tag">${c.tag}</span><span class="name">${c.name}</span></div>
+        <div class="ctrl">
+          <button class="btn-step btn-minus" onpointerdown="step('${c.key}',-1)">−</button>
+          <div class="countwrap">
+            <input class="count" id="cnt-${c.key}" type="text" inputmode="numeric"
+              value="${day.counts[c.key]||0}" onfocus="this.select()"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+              onchange="setCount('${c.key}',this.value)" onblur="setCount('${c.key}',this.value)">
+            <div class="hint">直接入力可</div>
+          </div>
+          <button class="btn-step btn-plus" onpointerdown="step('${c.key}',1)">＋</button>
+        </div>
+        ${flagsHtml}
+      </div>`;
+  };
+
+  // 訪問〜見込A の6枚を2列グリッドに、残り(商談・NURO・NTT10G)は1列
+  const twoColKeys = ["visits","ng","appo","meet","prospectS","prospect"];
+  const grid2 = COUNTERS.filter(c => twoColKeys.includes(c.key));
+  const single = COUNTERS.filter(c => !twoColKeys.includes(c.key));
+
+  el.innerHTML =
+    `<div class="card-grid2">${grid2.map(makeCard).join("")}</div>` +
+    single.map(makeCard).join("");
+  refreshSums();
+}
+
+function tapLine(key){
+  day.lines[key]=(day.lines[key]||0)+1;
+  const lc=document.getElementById("lc-"+key);
+  const lb=document.getElementById("lb-"+key);
+  if(lc) lc.textContent=day.lines[key];
+  if(lb) lb.classList.add("active");
+  if(navigator.vibrate) navigator.vibrate(8);
+  scheduleSave(); renderSummary();
+}
+
+function toggleNegoPanel(){
+  const panel = document.getElementById("nego-panel");
+  const btn = panel ? panel.previousElementSibling : null;
+  if(!panel) return;
+  const isOpen = panel.classList.toggle("open");
+  if(btn) btn.textContent = isOpen
+    ? "▲ トーク到達フラグ（タップで閉じる）"
+    : "▼ トーク到達フラグ（タップで展開）";
+}
+
+function refreshSums(){
+  const o=(day.counts.nuro||0)+(day.counts.ntt||0);
+  const totalFlags = NEGO_FLAGS.reduce((s,f)=>s+(day.flags[f.key]||0),0);
+  document.getElementById("sumOrders").textContent = o;
+  document.getElementById("sumRej").textContent    = day.rejections.length;
+  document.getElementById("sumIns").textContent    = day.insights.length;
+  document.getElementById("sumFlags").textContent  = totalFlags;
+}
+
+function step(key,delta){
+  day.counts[key]=Math.max(0,(day.counts[key]||0)+delta);
+  const inp=document.getElementById("cnt-"+key); if(inp) inp.value=day.counts[key];
+  if(navigator.vibrate) navigator.vibrate(8);
+  refreshSums(); scheduleSave(); renderSummary();
+}
+function setCount(key,val){
+  let n=parseInt(val,10); if(isNaN(n)||n<0) n=0;
+  day.counts[key]=n;
+  const inp=document.getElementById("cnt-"+key); if(inp) inp.value=n;
+  refreshSums(); scheduleSave(); renderSummary();
+}
+
+// ===== フラグボタン: タップ=+1 / 長押し0.5秒=−1 =====
+let _flagTimer = null;
+let _flagKey   = null;
+let _flagDone  = false; // 長押し処理が完了したか
+
+function startFlagPress(key){
+  _flagKey  = key;
+  _flagDone = false;
+  _flagTimer = setTimeout(() => {
+    _flagDone = true; // 長押し完了 → pointerupで+1しない
+    if((day.flags[key]||0) > 0){
+      day.flags[key]--;
+      day.counts.nego = Math.max(0,(day.counts.nego||0)-1);
+      const inp=document.getElementById("cnt-nego"); if(inp) inp.value=day.counts.nego;
+      updateFlagUI(key);
+      if(navigator.vibrate) navigator.vibrate([20,30,20]);
+      refreshSums(); scheduleSave(); renderSummary();
+    } else {
+      if(navigator.vibrate) navigator.vibrate(40); // 0以下は操作不可を通知
+    }
+  }, 500);
+}
+
+function cancelFlagPress(){
+  if(_flagTimer){ clearTimeout(_flagTimer); _flagTimer=null; }
+  const key = _flagKey;
+  _flagKey = null;
+  if(_flagDone){ _flagDone=false; return; } // 長押し済みなら+1しない
+  if(!key) return;
+  // 短タップ: +1
+  day.flags[key]=(day.flags[key]||0)+1;
+  day.counts.nego=(day.counts.nego||0)+1;
+  const inp=document.getElementById("cnt-nego"); if(inp) inp.value=day.counts.nego;
+  updateFlagUI(key);
+  if(navigator.vibrate) navigator.vibrate(12);
+  refreshSums(); scheduleSave(); renderSummary();
+}
+
+function updateFlagUI(key){
+  const fcnt  =document.getElementById("fc-"+key);
+  const fbadge=document.getElementById("fbadge-"+key);
+  const fbtn  =document.getElementById("fb-"+key);
+  if(fcnt)   fcnt.textContent   = day.flags[key];
+  if(fbadge) fbadge.textContent = day.flags[key];
+  if(fbtn)   fbtn.classList.toggle("active", day.flags[key]>0);
+}
+
+// ===== 撃退宅 =====
+function renderRej(){
+  const el=document.getElementById("rejList");
+  document.getElementById("rejCount").textContent=day.rejections.length+"件";
+  if(!day.rejections.length){
+    el.innerHTML=`<div class="empty-state"><div class="ico">🏠</div>本日の撃退宅はまだありません。</div>`;
+    refreshSums(); return;
+  }
+  const stc={"永久":"st-perm","当面不要":"st-tmp","期間限定":"st-term"};
+  el.innerHTML=day.rejections.map((r,i)=>`
+    <div class="rej">
+      <div class="top">
+        <div onclick="openRej(${i})" style="flex:1;min-width:0;">
+          <div class="addr">${esc(r.city)} ${esc(r.addr)}</div>
+          ${r.name?`<div class="nm">表札：${esc(r.name)}</div>`:""}
+          ${r.memo||r.status?`<div class="meta"><span class="rj-st">[ステータス] ${esc(r.status)}${r.term?" （"+esc(r.term)+"まで）":""}</span>${r.memo?`<span class="rj-memo"> ／ [メモ] ${esc(r.memo)}</span>`:""}</div>`:""}
+        </div>
+        <button class="del" onclick="delRej(${i})">✕</button>
+      </div>
+    </div>`).join("");
+  refreshSums();
+}
+
+// ===== 気づき =====
+function renderIns(){
+  const el=document.getElementById("insList");
+  document.getElementById("insCount").textContent=day.insights.length+"件";
+  if(!day.insights.length){
+    el.innerHTML=`<div class="empty-state"><div class="ico">💡</div>本日の気づきはまだありません。</div>`;
+    refreshSums(); return;
+  }
+  el.innerHTML=day.insights.map((ins,i)=>`
+    <div class="ins">
+      <div class="top">
+        <div class="body" onclick="openIns(${i})">
+          <div class="catbadge">${esc(ins.cat||"その他")}</div>
+          <div style="height:6px"></div>
+          <div class="content">${esc(ins.content)}</div>
+          ${ins.action?`<div class="try">${esc(ins.action)}</div>`:""}
+        </div>
+        <button class="del" onclick="delIns(${i})">✕</button>
+      </div>
+    </div>`).join("");
+  refreshSums();
+}
+
+// ===== サマリー =====
+// switchShot不要（ナビバーで切り替え）
+
+function renderSummary(){
+  const c=day.counts, o=(c.nuro||0)+(c.ntt||0);
+  const cell=(l,v,cls="")=>`<div class="gcell ${cls}"><span class="gl">${l}</span><span class="gv">${v}</span></div>`;
+
+  const rejHtml=day.rejections.length?day.rejections.map(r=>`
+    <div class="rj">
+      <div class="a">${esc(r.city)} ${esc(r.addr)}${r.name?`<span class="n"> ／ ${esc(r.name)}</span>`:""}</div>
+      <div class="m"><span class="rj-st">[ステータス] ${esc(r.status)}${r.term?" （"+esc(r.term)+"まで）":""}</span>${r.memo?`<span class="rj-memo"> ／ [メモ] ${esc(r.memo)}</span>`:""}</div>
+    </div>`).join(""):`<div class="none">本日の撃退宅なし</div>`;
+
+  const insHtml=day.insights.length?day.insights.map(ins=>`
+    <div class="ins-item">
+      <span class="ic">${esc(ins.cat||"その他")}</span>
+      <div class="ix">${esc(ins.content)}</div>
+      ${ins.action?`<div class="it">${esc(ins.action)}</div>`:""}
+    </div>`).join(""):`<div class="none">本日の気づきなし</div>`;
+
+  // 商談内訳HTML（3列グリッド）
+  const activeFlags = NEGO_FLAGS.filter(f=>day.flags[f.key]>0);
+  // アルファベット+件数のみコンパクト表示（例: A:2 B:1 C:3）
+  const flagsHtml = activeFlags.length
+    ? `<div class="nego-inline">${activeFlags.map(f=>`
+        <span class="nchip"><span class="nl">${f.lab}:</span><span class="nv">${day.flags[f.key]}</span></span>`).join("")}</div>`
+    : `<div class="none">商談フラグなし</div>`;
+
+  const header=`
+    <div class="shot-guide"><span>📸 ここから下をスクショ</span></div>
+    <div class="sh-who">
+      <div><b>営業員名</b><span>${esc(profile.name||"（未設定）")}</span></div>
+      <div><b>担当エリア</b><span>${esc(profile.area||"（未設定）")}</span></div>
+    </div>
+    <div class="sh-daterow">
+      <span class="sd-label">稼働日</span>
+      <span class="sd-val">${fmtDate(today)}&nbsp;<span class="sd-dow">(${dow(today)})</span></span>
+    </div>`;
+
+  document.getElementById("shot-a").innerHTML=`<div class="shot">
+    ${header}
+    <div class="sh-badge a">日報A ／ 数値・撃退宅</div>
+    <div class="gtitle">本日合計</div>
+    <div class="grid">
+      ${cell("①訪問",c.visits||0)}${cell("ｲﾝﾀｰﾎﾝNG",c.ng||0)}
+      ${cell("見込B",c.appo||0)}${cell("②面談",c.meet||0)}
+      ${cell("見込S",c.prospectS||0)}${cell("見込A",c.prospect||0)}
+      ${cell("③商談",c.nego||0)}
+      ${cell("NURO受注",c.nuro||0,"accent")}${cell("NTT10G受注",c.ntt||0,"accent")}
+      ${cell("受注 合計",o,"accent2")}${cell("撃退 件数",day.rejections.length,"accent3")}
+    </div>
+    <div class="gtitle">商談内訳（トーク到達フラグ）</div>
+    ${flagsHtml}
+    <div class="gtitle">現状回線</div>
+    ${linesHtml}
+    <div class="gtitle">撃退宅（再訪禁止）</div>
+    <div class="rejlist">${rejHtml}</div>
+    <div class="foot">日報A ・ ${fmtDate(today)} ・ AIプロンプト読み取り用</div>
+  </div>`;
+
+  document.getElementById("shot-b").innerHTML=`<div class="shot">
+    ${header}
+    <div class="sh-badge b">日報B ／ 気づき記録</div>
+    <div class="gtitle">本日の気づき（${day.insights.length}件）</div>
+    <div class="inslist">${insHtml}</div>
+    <div class="foot">日報B ・ ${fmtDate(today)} ・ AIプロンプト読み取り用</div>
+  </div>`;
+}
+
+// ===== nav =====
+function go(s){
+  ["count","rej","ins","suma","sumb"].forEach(x=>{
+    document.getElementById("scr-"+x).classList.toggle("hidden",x!==s);
+    document.getElementById("nav-"+x).classList.toggle("on",x===s);
+  });
+  if(s==="suma"||s==="sumb") renderSummary();
+  window.scrollTo(0,0);
+}
+
+// ===== プロフィール =====
+function openProfile(){
+  showSheet(`
+    <h3>営業員 設定</h3>
+    <div class="desc">氏名・エリア・地域は次回も保持されます。</div>
+    <div class="field"><label>営業員名</label><input id="f-name" value="${esc(profile.name)}" placeholder="例：山田 太郎"></div>
+    <div class="field"><label>担当エリア</label><input id="f-area" value="${esc(profile.area)}" placeholder="例：安佐南区田中2丁目"></div>
+    <div class="field"><label>地域（回線ボタンが切り替わります）</label>
+      <div class="seg" id="f-region">
+        <button data-r="hiroshima" class="${profile.region!=='tokai'?'on':''}" onclick="pickRegion('hiroshima')">広島</button>
+        <button data-r="tokai"     class="${profile.region==='tokai'?'on':''}"     onclick="pickRegion('tokai')">東海</button>
+      </div>
+    </div>
+    <div class="field"><label>稼働日</label><input id="f-date" type="date" value="${today}"></div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeSheet()">キャンセル</button>
+      <button class="btn-save" onclick="saveProfile()">保存</button>
+    </div>`);
+}
+function pickRegion(r){
+  const seg=document.getElementById("f-region");
+  [...seg.children].forEach(b=>b.classList.toggle("on",b.dataset.r===r));
+  seg.dataset.val=r;
+}
+
+async function saveProfile(){
+  profile.name=document.getElementById("f-name").value.trim();
+  profile.area=document.getElementById("f-area").value.trim();
+  const seg=document.getElementById("f-region");
+  if(seg) profile.region=seg.dataset.val||profile.region||"hiroshima";
+  const nd=document.getElementById("f-date").value;
+  saveProfileNow();
+  if(nd&&nd!==today){
+    today=nd;
+    const d=await sget("day:"+today);
+    day={counts:{},flags:{},lines:{},rejections:[],insights:[]};
+    COUNTERS.forEach(c=>day.counts[c.key]=0);
+    NEGO_FLAGS.forEach(f=>day.flags[f.key]=0);
+    [LINE_HIROSHIMA, LINE_TOKAI, ...LINE_COMMON].forEach(l => day.lines[l.key]=0);
+    if(d){
+      day.counts=     {...day.counts,  ...(d.counts  ||{})};
+      day.flags=      {...day.flags,   ...(d.flags   ||{})};
+      day.lines=      {...day.lines,   ...(d.lines   ||{})};
+      day.rejections= d.rejections||[];
+      day.insights=   d.insights  ||[];
+    }
+  }
+  closeSheet(); renderAll(); toast("設定を保存しました");
+}
+
+// ===== 撃退宅モーダル =====
+function openRej(idx){
+  editingRej=(typeof idx==="number")?idx:null;
+  const r=editingRej!==null?day.rejections[editingRej]:{city:"",addr:"",name:"",memo:"",status:"永久",term:""};
+  showSheet(`
+    <h3>${editingRej!==null?"撃退宅を編集":"撃退宅を登録"}</h3>
+    <div class="desc">クレーム・強い拒絶の訪問先。撃退件数は自動カウントされます。</div>
+    <div class="field"><label>市区町村</label><input id="r-city" value="${esc(r.city)}" placeholder="例：豊田市"></div>
+    <div class="field"><label>番地・住所</label><input id="r-addr" value="${esc(r.addr)}" placeholder="例：○○3丁目5番"></div>
+    <div class="field"><label>表札・名前（任意）</label><input id="r-name" value="${esc(r.name)}" placeholder="例：田中"></div>
+    <div class="field"><label>詳細メモ（任意）</label><textarea id="r-memo" placeholder="例：クレーマー">${esc(r.memo)}</textarea></div>
+    <div class="field"><label>ステータス</label>
+      <div class="seg" id="r-seg">
+        ${["永久","当面不要","期間限定"].map(s=>`<button data-st="${s}" class="${r.status===s?"on":""}" onclick="pickSt('${s}')">${s}</button>`).join("")}
+      </div>
+    </div>
+    <div class="field ${r.status==="期間限定"?"":"hidden"}" id="r-termwrap"><label>期限</label><input id="r-term" type="month" value="${esc(r.term)}"></div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeSheet()">キャンセル</button>
+      <button class="btn-save red" onclick="saveRej()">${editingRej!==null?"更新":"登録"}</button>
+    </div>`);
+  document.getElementById("r-seg").dataset.val=r.status;
+}
+function pickSt(s){
+  const seg=document.getElementById("r-seg");
+  seg.dataset.val=s;
+  [...seg.children].forEach(b=>b.classList.toggle("on",b.dataset.st===s));
+  document.getElementById("r-termwrap").classList.toggle("hidden",s!=="期間限定");
+}
+function saveRej(){
+  const city=document.getElementById("r-city").value.trim();
+  const addr=document.getElementById("r-addr").value.trim();
+  if(!city&&!addr){toast("住所を入力してください");return;}
+  const obj={city,addr,
+    name:document.getElementById("r-name").value.trim(),
+    memo:document.getElementById("r-memo").value.trim(),
+    status:document.getElementById("r-seg").dataset.val||"永久",
+    term:document.getElementById("r-term")?document.getElementById("r-term").value:"",
+  };
+  if(editingRej!==null) day.rejections[editingRej]=obj; else day.rejections.push(obj);
+  closeSheet(); scheduleSave(); renderRej(); renderSummary();
+  toast(editingRej!==null?"更新しました":"撃退宅を登録しました");
+}
+function delRej(i){
+  if(!confirm("この撃退宅を削除しますか？"))return;
+  day.rejections.splice(i,1); scheduleSave(); renderRej(); renderSummary();
+}
+
+// ===== 気づきモーダル =====
+function openIns(idx){
+  editingIns=(typeof idx==="number")?idx:null;
+  const ins=editingIns!==null?day.insights[editingIns]:{cat:"エリア",content:"",action:""};
+  showSheet(`
+    <h3>${editingIns!==null?"気づきを編集":"気づきを記録"}</h3>
+    <div class="desc">現場で気づいたことを記録します。</div>
+    <div class="field"><label>カテゴリ</label>
+      <div class="catsel" id="i-cat">
+        ${CATS.map(cat=>`<button data-cat="${cat}" class="${ins.cat===cat?"on":""}" onclick="pickCat('${cat}')">${cat}</button>`).join("")}
+      </div>
+    </div>
+    <div class="field"><label>気づき・発見した内容</label>
+      <textarea id="i-content" placeholder="例：18時以降は共働き世帯が多く面談率が上がる">${esc(ins.content)}</textarea></div>
+    <div class="field"><label>明日から試すこと（任意）</label>
+      <textarea id="i-action" placeholder="例：16時以降は共働きエリアに集中する">${esc(ins.action)}</textarea></div>
+    <div class="actions">
+      <button class="btn-cancel" onclick="closeSheet()">キャンセル</button>
+      <button class="btn-save indigo" onclick="saveIns()">${editingIns!==null?"更新":"記録する"}</button>
+    </div>`);
+  document.getElementById("i-cat").dataset.val=ins.cat||"エリア";
+}
+function pickCat(cat){
+  const el=document.getElementById("i-cat");
+  el.dataset.val=cat;
+  [...el.children].forEach(b=>b.classList.toggle("on",b.dataset.cat===cat));
+}
+function saveIns(){
+  const content=document.getElementById("i-content").value.trim();
+  if(!content){toast("気づき内容を入力してください");return;}
+  const obj={cat:document.getElementById("i-cat").dataset.val||"その他",content,
+    action:document.getElementById("i-action").value.trim()};
+  if(editingIns!==null) day.insights[editingIns]=obj; else day.insights.push(obj);
+  closeSheet(); scheduleSave(); renderIns(); renderSummary();
+  toast(editingIns!==null?"更新しました":"気づきを記録しました");
+}
+function delIns(i){
+  if(!confirm("この気づきを削除しますか？"))return;
+  day.insights.splice(i,1); scheduleSave(); renderIns(); renderSummary();
+}
+
+// ===== リセット =====
+function confirmReset(){
+  if(!confirm(fmtDate(today)+" のデータをすべてリセットしますか？"))return;
+  day={counts:{},flags:{},lines:{},rejections:[],insights:[]};
+  COUNTERS.forEach(c=>day.counts[c.key]=0);
+  NEGO_FLAGS.forEach(f=>day.flags[f.key]=0);
+  [LINE_HIROSHIMA, LINE_TOKAI, ...LINE_COMMON].forEach(l => day.lines[l.key]=0);
+  scheduleSave(); renderAll(); toast("リセットしました");
+}
+
+// ===== ヘルパー =====
+function showSheet(html){
+  const o=document.createElement("div");o.className="overlay";o.id="overlay";
+  o.innerHTML=`<div class="sheet" onclick="event.stopPropagation()">${html}</div>`;
+  o.onclick=closeSheet; document.body.appendChild(o);
+}
+function closeSheet(){const o=document.getElementById("overlay");if(o)o.remove();}
+let toastT=null;
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800);
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) renderAll();});
+init();
+</script>
