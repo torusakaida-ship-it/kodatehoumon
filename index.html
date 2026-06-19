@@ -6,7 +6,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="訪問カウンター">
 <meta name="theme-color" content="#13151a">
-<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#13151a;--surface:#1b1e25;--surface2:#23272f;--surface3:#2c313a;
@@ -14,8 +13,8 @@
   --text:#eef2f7;--muted:#8a93a3;--faint:#5c6573;
   --blue:#3b82f6;--purple:#a855f7;--green:#22c55e;--orange:#f59e0b;
   --red:#ef4444;--teal:#14b8a6;--amber:#ffb020;--indigo:#6366f1;--cyan:#06b6d4;
-  --ja:"Zen Kaku Gothic New",sans-serif;
-  --num:"Saira Condensed","Zen Kaku Gothic New",sans-serif;
+  --ja:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+  --num:"SF Mono","Courier New",monospace;
   --shadow:0 6px 20px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -207,7 +206,7 @@ input,select,textarea{font-family:var(--ja);}
 .shot .sh-daterow{display:flex;align-items:center;justify-content:space-between;
   margin:5px 0 8px;padding:4px 10px;background:#f1f5f9;border-radius:7px;}
 .shot .sh-daterow .sd-label{font-size:9px;color:#7a828f;font-weight:700;letter-spacing:.1em;}
-.shot .sh-daterow .sd-val{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:16px;color:#1a1d23;}
+.shot .sh-daterow .sd-val{font-family:var(--num);font-weight:700;font-size:16px;color:#1a1d23;}
 .shot .sh-daterow .sd-dow{color:#b45309;}
 .shot .gtitle{font-size:11px;font-weight:900;color:#b45309;letter-spacing:.08em;margin:9px 0 5px;
   display:flex;align-items:center;gap:6px;}
@@ -232,8 +231,8 @@ input,select,textarea{font-family:var(--ja);}
 .nego-inline{background:#fff;border:1px solid #e3e7ee;border-radius:9px;padding:8px 11px;
   display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
 .nchip{display:flex;align-items:center;gap:3px;}
-.nchip .nl{font-size:11px;font-weight:900;color:#0e7490;font-family:"Saira Condensed",sans-serif;}
-.nchip .nv{font-family:"Saira Condensed",sans-serif;font-size:16px;font-weight:700;color:#1a1d23;}
+.nchip .nl{font-size:11px;font-weight:900;color:#0e7490;font-family:var(--num);}
+.nchip .nv{font-family:var(--num);font-size:16px;font-weight:700;color:#1a1d23;}
 .shot .rejlist,.shot .inslist{margin-top:5px;}
 .shot .rj,.shot .ins-item{background:#fff;border:1px solid #e3e7ee;border-radius:9px;
   padding:8px 10px;margin-bottom:6px;}
